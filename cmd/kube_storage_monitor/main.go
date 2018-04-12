@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/caicloud/kube-storage-monitor/cmd/kube_storage_monitor/app"
+	"github.com/NickrenREN/kubemonitor/cmd/kube_storage_monitor/app"
 )
 
 func main() {

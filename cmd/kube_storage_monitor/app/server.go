@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/caicloud/kube-storage-monitor/cmd/kube_storage_monitor/local_pv"
+	"github.com/NickrenREN/kubemonitor/cmd/kube_storage_monitor/local_pv"
 
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/util/wait"

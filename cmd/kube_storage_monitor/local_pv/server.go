@@ -3,7 +3,7 @@ package local_pv
 import (
 	"os"
 
-	lvmonitor "github.com/caicloud/kube-storage-monitor/pkg/local_pv_monitor"
+	lvmonitor "github.com/NickrenREN/kubemonitor/pkg/local_pv_monitor"
 	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/external-storage/local-volume/provisioner/pkg/common"
 

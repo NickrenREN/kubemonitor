@@ -42,10 +42,8 @@ const (
 
 // marking event related const vars
 const (
-	MarkPVFailed      = "MarkPVFailed"
-	UnMarkPVFailed    = "UnMarkPVFailed"
-	MarkPVSucceeded   = "MarkPVSucceeded"
-	UnMarkPVSucceeded = "UnMarkPVSucceeded"
+	MarkPVFailed    = "MarkPVFailed"
+	MarkPVSucceeded = "MarkPVSucceeded"
 
 	HostPathNotExist  = "HostPathNotExist"
 	MisMatchedVolSize = "MisMatchedVolSize"
@@ -332,10 +330,11 @@ func (monitor *LocalPVMonitor) checkPVAndFSSize(mountPath string, pv *v1.Persist
 		glog.Errorf("Path %q fs stats error: %v", mountPath, err)
 		return
 	}
-	// actually if PV is provisioned by provisioner, the two values must be equal, but the PV may be
+	// actually if PV is provisioned dynamically by provisioner, the two values must be equal, but the PV may be
 	// created manually, so the PV capacity must not be greater than FS capacity
 	storage := pv.Spec.Capacity[v1.ResourceStorage]
-	if util.RoundDownCapacityPretty(capacityByte) < storage.Value() {
+	if storage.Value() > util.RoundDownCapacityPretty(capacityByte) {
+		glog.Errorf("PV capacity must not be greater that FS capacity, PV capacity: %v, FS capacity: %v", storage.Value(), util.RoundDownCapacityPretty(capacityByte))
 		// mark PV and send a event
 		err = monitor.markPV(pv, MisMatchedVolSize, "yes")
 		if err != nil {
@@ -343,7 +342,21 @@ func (monitor *LocalPVMonitor) checkPVAndFSSize(mountPath string, pv *v1.Persist
 		}
 		return
 	}
-	// TODO: make sure that PV used bytes is not greater that PV capacity ?
+	// make sure that PV usage is not greater than PV capacity
+	usageByte, err := util.GetFsUsageByte(mountPath)
+	if err != nil {
+		glog.Errorf("Path %q fs stats error: %v", mountPath, err)
+		return
+	}
+	if util.RoundDownCapacityPretty(usageByte) > storage.Value() {
+		glog.Errorf("PV usage must not be greater than PV capacity, usage: %v, capacity: %v", util.RoundDownCapacityPretty(usageByte), storage.Value())
+		// mark PV and send a event
+		err = monitor.markPV(pv, MisMatchedVolSize, "yes")
+		if err != nil {
+			glog.Errorf("mark PV: %s failed, err: %v", pv.Name, err)
+		}
+		return
+	}
 
 	return
 
@@ -355,10 +368,11 @@ func (monitor *LocalPVMonitor) checkPVAndBlockSize(mountPath string, pv *v1.Pers
 		glog.Errorf("Path %q block stats error: %v", mountPath, err)
 		return
 	}
-	// actually if PV is provisioned by provisioner, the two values must be equal, but the PV may be
+	// actually if PV is provisioned dynamically by provisioner, the two values must be equal, but the PV may be
 	// created manually, so the PV capacity must not be greater than block device capacity
 	storage := pv.Spec.Capacity[v1.ResourceStorage]
-	if util.RoundDownCapacityPretty(capacityByte) < storage.Value() {
+	if storage.Value() > util.RoundDownCapacityPretty(capacityByte) {
+		glog.Errorf("PV capacity must not be greater that FS capacity, PV capacity: %v, FS capacity: %v", storage.Value(), util.RoundDownCapacityPretty(capacityByte))
 		// mark PV and send a event
 		err = monitor.markPV(pv, MisMatchedVolSize, "yes")
 		if err != nil {
@@ -366,7 +380,23 @@ func (monitor *LocalPVMonitor) checkPVAndBlockSize(mountPath string, pv *v1.Pers
 		}
 		return
 	}
-	// TODO: make sure that PV used bytes is not greater that PV capacity ?
+
+	// make sure that PV usage is not greater than PV capacity
+	// notice that PV has been mounted, and it will be formatted too, so call fs usage command here
+	usageByte, err := util.GetFsUsageByte(mountPath)
+	if err != nil {
+		glog.Errorf("Path %q fs stats error: %v", mountPath, err)
+		return
+	}
+	if util.RoundDownCapacityPretty(usageByte) > storage.Value() {
+		glog.Errorf("PV usage must not be greater than PV capacity, usage: %v, capacity: %v", util.RoundDownCapacityPretty(usageByte), storage.Value())
+		// mark PV and send a event
+		err = monitor.markPV(pv, MisMatchedVolSize, "yes")
+		if err != nil {
+			glog.Errorf("mark PV: %s failed, err: %v", pv.Name, err)
+		}
+		return
+	}
 
 	return
 }

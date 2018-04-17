@@ -3,6 +3,7 @@ package util
 import (
 	esutil "github.com/kubernetes-incubator/external-storage/lib/util"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/kubernetes/pkg/volume/util"
 )
 
@@ -22,10 +23,10 @@ func RoundDownCapacityPretty(capacityBytes int64) int64 {
 	return capacityBytes
 }
 
-// GetFsUsageByte returns usage in bytes about a mounted filesystem.
+// GetDirUsageByte returns usage in bytes about a mounted filesystem.
 // fullPath is the pathname of any file within the mounted filesystem. Usage
 // returned here is block being used * fragment size (aka block size).
-func GetFsUsageByte(fullPath string) (int64, error) {
-	_, _, usage, _, _, _, err := util.FsInfo(fullPath)
+func GetDirUsageByte(fullPath string) (*resource.Quantity, error) {
+	usage, err := util.Du(fullPath)
 	return usage, err
 }

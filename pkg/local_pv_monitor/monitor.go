@@ -254,14 +254,12 @@ func (monitor *LocalPVMonitor) checkStatus(pv *v1.PersistentVolume) {
 	}
 
 	// check PV size: PV capacity must not be greater than device capacity and PV used bytes must not be greater that PV capacity
-	dir, _ := monitor.VolUtil.IsDir(mountPath)
-	if dir {
+	if pv.Spec.VolumeMode != nil && *pv.Spec.VolumeMode == v1.PersistentVolumeBlock {
+		monitor.checkPVAndBlockSize(mountPath, pv)
+	} else {
 		monitor.checkPVAndFSSize(mountPath, pv)
 	}
-	bl, _ := monitor.VolUtil.IsBlock(mountPath)
-	if bl {
-		monitor.checkPVAndBlockSize(mountPath, pv)
-	}
+
 }
 
 func (monitor *LocalPVMonitor) checkMountPoint(mountPath string, pv *v1.PersistentVolume) bool {
@@ -343,13 +341,13 @@ func (monitor *LocalPVMonitor) checkPVAndFSSize(mountPath string, pv *v1.Persist
 		return
 	}
 	// make sure that PV usage is not greater than PV capacity
-	usageByte, err := util.GetFsUsageByte(mountPath)
+	usage, err := util.GetDirUsageByte(mountPath)
 	if err != nil {
 		glog.Errorf("Path %q fs stats error: %v", mountPath, err)
 		return
 	}
-	if util.RoundDownCapacityPretty(usageByte) > storage.Value() {
-		glog.Errorf("PV usage must not be greater than PV capacity, usage: %v, capacity: %v", util.RoundDownCapacityPretty(usageByte), storage.Value())
+	if usage.Value() > storage.Value() {
+		glog.Errorf("PV usage must not be greater than PV capacity, usage: %v, capacity: %v", usage.Value(), storage.Value())
 		// mark PV and send a event
 		err = monitor.markPV(pv, MisMatchedVolSize, "yes")
 		if err != nil {
@@ -357,9 +355,6 @@ func (monitor *LocalPVMonitor) checkPVAndFSSize(mountPath string, pv *v1.Persist
 		}
 		return
 	}
-
-	return
-
 }
 
 func (monitor *LocalPVMonitor) checkPVAndBlockSize(mountPath string, pv *v1.PersistentVolume) {
@@ -382,21 +377,7 @@ func (monitor *LocalPVMonitor) checkPVAndBlockSize(mountPath string, pv *v1.Pers
 	}
 
 	// make sure that PV usage is not greater than PV capacity
-	// notice that PV has been mounted, and it will be formatted too, so call fs usage command here
-	usageByte, err := util.GetFsUsageByte(mountPath)
-	if err != nil {
-		glog.Errorf("Path %q fs stats error: %v", mountPath, err)
-		return
-	}
-	if util.RoundDownCapacityPretty(usageByte) > storage.Value() {
-		glog.Errorf("PV usage must not be greater than PV capacity, usage: %v, capacity: %v", util.RoundDownCapacityPretty(usageByte), storage.Value())
-		// mark PV and send a event
-		err = monitor.markPV(pv, MisMatchedVolSize, "yes")
-		if err != nil {
-			glog.Errorf("mark PV: %s failed, err: %v", pv.Name, err)
-		}
-		return
-	}
+	// we can not get raw block device usage for now, so skip this check
 
 	return
 }

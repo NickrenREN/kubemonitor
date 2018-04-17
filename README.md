@@ -1,7 +1,5 @@
-# Kube-Storage-Monitor
-Kubernetes Storage Monitor
-
-kube-storage-monitor is used to monitor different kinds of PVs.
+# KubeMonitor
+Monitor for kubernetes objects, focusing on storage at first
 
 ## Compile
 

@@ -16,7 +16,7 @@
 [[projects]]
   name = "github.com/docker/distribution"
   packages = [
-    "digest",
+    "digestset",
     "reference"
   ]
   revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
@@ -137,6 +137,12 @@
   packages = ["."]
   revision = "1df9eeb2bb81f327b96228865c5687bc2194af3f"
   version = "1.0.0"
+
+[[projects]]
+  name = "github.com/opencontainers/go-digest"
+  packages = ["."]
+  revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
+  version = "v1.0.0-rc1"
 
 [[projects]]
   name = "github.com/prometheus/client_golang"
@@ -548,6 +554,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3173616c870d9bd322702c99049d251a5d637783436b7723a1532fbfaf778711"
+  inputs-digest = "d064f632ebc2de07c78e1f01f04338313b08067f1525b8fdbeb4c2f45bdc1086"
   solver-name = "gps-cdcl"
   solver-version = 1
